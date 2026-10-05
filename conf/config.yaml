@@ -1,0 +1,7 @@
+# 手工启动 mock 服务时使用该地址；pytest 会在测试期间注入一个空闲端口。
+api:
+  base_url: http://127.0.0.1:5000
+  timeout: 5
+tdms:
+  # 本机真实 DAS TDMS 数据根目录；也可用环境变量 TDMS_DATA_ROOT 覆盖。
+  data_root: F:/数据

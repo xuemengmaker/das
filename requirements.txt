@@ -1,0 +1,8 @@
+Flask>=3.0,<4.0
+requests>=2.31,<3.0
+PyYAML>=6.0,<7.0
+pytest>=8.0,<9.0
+allure-pytest>=2.13,<3.0
+nptdms>=1.9,<2.0
+# nptdms 当前版本在 NumPy 2.5 会逐样点发出弃用警告，固定兼容版本保证测试输出可读。
+numpy>=1.24,<2.0

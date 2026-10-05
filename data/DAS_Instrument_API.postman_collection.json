@@ -1,0 +1,71 @@
+{
+  "info": {
+    "_postman_id": "66a9c7f5-d04e-4c62-bc4b-9ea2d0f8ab11",
+    "name": "DAS Instrument API Practice",
+    "description": "Local DAS instrument testing workflow. Requires start_service.ps1 and F:\\数据.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:5000" },
+    { "key": "tdms_file", "value": "" },
+    { "key": "task_id", "value": "" },
+    { "key": "channel_1_rms", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Device status",
+      "request": { "method": "GET", "url": "{{base_url}}/api/v1/devices/DAS-001/status" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('设备在线', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().data.status).to.eql('online');", "});"] } }]
+    },
+    {
+      "name": "02 List TDMS files and extract path",
+      "request": { "method": "GET", "url": "{{base_url}}/api/v1/tdms/files?hour=00&limit=1" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('文件查询成功', function () {", "  pm.response.to.have.status(200);", "  const body = pm.response.json();", "  pm.collectionVariables.set('tdms_file', body.data.files[0].relative_path);", "});"] } }]
+    },
+    {
+      "name": "03 Start acquisition task",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"DAS-001\",\n  \"source_file\": \"{{tdms_file}}\",\n  \"sampling_rate_hz\": 1000,\n  \"channel_start\": 1,\n  \"channel_end\": 16,\n  \"duration_seconds\": 10\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{base_url}}/api/v1/acquisition/tasks"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('采集任务创建成功', function () {", "  pm.response.to.have.status(201);", "  const body = pm.response.json();", "  pm.collectionVariables.set('task_id', body.data.task_id);", "});"] } }]
+    },
+    {
+      "name": "04 Query acquisition task",
+      "request": { "method": "GET", "url": "{{base_url}}/api/v1/acquisition/tasks/{{task_id}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('任务已完成', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().data.status).to.eql('completed');", "});"] } }]
+    },
+    {
+      "name": "05 Signal quality check",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"relative_path\": \"{{tdms_file}}\",\n  \"channels_one_based\": [1, 2],\n  \"start_sample\": 0,\n  \"n_samples\": 1000\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{base_url}}/api/v1/tdms/quality-check"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('质量检查成功', function () {", "  pm.response.to.have.status(200);", "  const body = pm.response.json();", "  pm.collectionVariables.set('channel_1_rms', body.data.metrics[0].rms);", "});"] } }]
+    },
+    {
+      "name": "06 Evaluate alarm",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"rms\": {{channel_1_rms}},\n  \"warning_threshold\": 2.0,\n  \"critical_threshold\": 4.0\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{base_url}}/api/v1/signals/alarms/evaluate"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('告警判定为 warning', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().data.severity).to.eql('warning');", "});"] } }]
+    },
+    {
+      "name": "07 Background screening",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"relative_path\": \"{{tdms_file}}\",\n  \"channel_start\": 1,\n  \"channel_end\": 24,\n  \"start_sample\": 0,\n  \"n_samples\": 1000,\n  \"background_fraction\": 0.60\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{base_url}}/api/v1/warnings/background-scan"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('背景初筛成功', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().data.analysis_scope).to.eql('single_file_preliminary_screening');", "});"] } }]
+    }
+  ]
+}

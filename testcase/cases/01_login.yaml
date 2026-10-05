@@ -1,0 +1,10 @@
+name: 查询仪器在线状态（采集前置条件）
+request:
+  method: GET
+  path: /api/v1/devices/DAS-001/status
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.status: online
+    $.data.acquisition_supported: true

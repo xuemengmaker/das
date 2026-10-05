@@ -1,0 +1,18 @@
+name: 自动学习背景并对 TDMS 连续通道执行异常初筛
+request:
+  method: POST
+  path: /api/v1/warnings/background-scan
+  json:
+    relative_path: ${tdms_file}
+    channel_start: 1
+    channel_end: 24
+    start_sample: 0
+    n_samples: 1000
+    background_fraction: 0.60
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.analysis_scope: single_file_preliminary_screening
+    $.data.window.channel_count: 24
+    $.data.background.channel_count: 14

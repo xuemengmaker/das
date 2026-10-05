@@ -1,0 +1,13 @@
+name: 基于真实 RMS 结果评价预警等级
+request:
+  method: POST
+  path: /api/v1/signals/alarms/evaluate
+  json:
+    rms: ${channel_1_rms}
+    warning_threshold: 2.0
+    critical_threshold: 4.0
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.severity: warning

@@ -1,0 +1,14 @@
+name: 查询采集源文件并提取 TDMS 路径
+request:
+  method: GET
+  path: /api/v1/tdms/files
+  params:
+    hour: "00"
+    limit: 2
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.hour: "00"
+extract:
+  tdms_file: $.data.files.0.relative_path

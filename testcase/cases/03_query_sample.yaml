@@ -1,0 +1,19 @@
+name: 下发仪器采集任务（正常场景）
+request:
+  method: POST
+  path: /api/v1/acquisition/tasks
+  json:
+    device_id: DAS-001
+    source_file: ${tdms_file}
+    sampling_rate_hz: 1000
+    channel_start: 1
+    channel_end: 16
+    duration_seconds: 10
+expected:
+  status_code: 201
+  body:
+    $.code: 0
+    $.data.status: completed
+    $.data.output.samples_per_channel: 10000
+extract:
+  task_id: $.data.task_id

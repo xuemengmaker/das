@@ -1,0 +1,11 @@
+name: 查询已完成的采集任务（接口关联）
+request:
+  method: GET
+  path: /api/v1/acquisition/tasks/${task_id}
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.status: completed
+    $.data.device_id: DAS-001
+

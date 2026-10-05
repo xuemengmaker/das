@@ -1,0 +1,17 @@
+name: 对真实 TDMS 信号执行通道与时间窗质量检查
+request:
+  method: POST
+  path: /api/v1/tdms/quality-check
+  json:
+    relative_path: ${tdms_file}
+    channels_one_based: [1, 2]
+    start_sample: 0
+    n_samples: 1000
+expected:
+  status_code: 200
+  body:
+    $.code: 0
+    $.data.window.channel_count: 2
+    $.data.window.n_samples: 1000
+extract:
+  channel_1_rms: $.data.metrics.0.rms
